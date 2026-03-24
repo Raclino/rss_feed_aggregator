@@ -1,5 +1,5 @@
 main_package_path = ./cmd/
-binary_name = rssfeedaggregator
+binary_name = gator
 
 ## help: print this help message
 .PHONY: help
