@@ -5,24 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Raclino/rss_feed_aggregator/internal/config"
 	"github.com/Raclino/rss_feed_aggregator/internal/database"
 	"github.com/google/uuid"
 )
-
-type State struct {
-	Config *config.Config
-	Db     *database.Queries
-}
-
-type Command struct {
-	Name string
-	Args []string
-}
-
-type Commands struct {
-	Handlers map[string]func(*State, Command) error
-}
 
 func (c *Commands) Run(s *State, cmd Command) error {
 	handler, ok := c.Handlers[cmd.Name]
