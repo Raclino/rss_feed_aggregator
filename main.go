@@ -22,6 +22,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	}
+
 	dbQueries := database.New(db)
 
 	state := &cli.State{
@@ -30,7 +34,7 @@ func main() {
 	}
 
 	commands := &cli.Commands{
-		Cmd: make(map[string]func(*cli.State, cli.Command) error),
+		Handlers: make(map[string]func(*cli.State, cli.Command) error),
 	}
 	commands.Register("login", cli.HandlerLogin)
 	commands.Register("register", cli.HandlerRegister)

@@ -21,11 +21,11 @@ type Command struct {
 }
 
 type Commands struct {
-	Cmd map[string]func(*State, Command) error
+	Handlers map[string]func(*State, Command) error
 }
 
 func (c *Commands) Run(s *State, cmd Command) error {
-	handler, ok := c.Cmd[cmd.Name]
+	handler, ok := c.Handlers[cmd.Name]
 	if !ok {
 		return fmt.Errorf("unknown command: %s", cmd.Name)
 	}
@@ -34,7 +34,7 @@ func (c *Commands) Run(s *State, cmd Command) error {
 }
 
 func (c *Commands) Register(name string, f func(*State, Command) error) {
-	c.Cmd[name] = f
+	c.Handlers[name] = f
 }
 
 func HandlerLogin(s *State, cmd Command) error {
