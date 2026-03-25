@@ -18,7 +18,12 @@ func main() {
 	}
 
 	db, err := sql.Open("postgres", conf.DbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	dbQueries := database.New(db)
+
 	state := &cli.State{
 		Config: conf,
 		Db:     dbQueries,
@@ -30,18 +35,16 @@ func main() {
 	commands.Register("login", cli.HandlerLogin)
 	commands.Register("register", cli.HandlerRegister)
 
-	userArgs := os.Args
-	if len(userArgs) < 2 {
-		log.Fatal("error, not enough arguments provided")
-	}
-	if len(userArgs) == 2 {
-		log.Fatal("error, username is required")
+	if len(os.Args) < 2 {
+		log.Fatal("error: no command provided")
 	}
 
-	usrCommand := cli.Command{Name: userArgs[1], Args: userArgs[1:]}
-	err = commands.Run(state, usrCommand)
-	if err != nil {
+	cmd := cli.Command{
+		Name: os.Args[1],
+		Args: os.Args[2:],
+	}
+
+	if err := commands.Run(state, cmd); err != nil {
 		log.Fatal(err)
 	}
-
 }

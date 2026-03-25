@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/Raclino/rss_feed_aggregator/internal/config"
@@ -20,6 +19,7 @@ type Command struct {
 	Name string
 	Args []string
 }
+
 type Commands struct {
 	Cmd map[string]func(*State, Command) error
 }
@@ -27,60 +27,63 @@ type Commands struct {
 func (c *Commands) Run(s *State, cmd Command) error {
 	handler, ok := c.Cmd[cmd.Name]
 	if !ok {
-		return fmt.Errorf("error, %s is not registered", cmd.Name)
+		return fmt.Errorf("unknown command: %s", cmd.Name)
 	}
 
 	return handler(s, cmd)
 }
 
 func (c *Commands) Register(name string, f func(*State, Command) error) {
-	_, ok := c.Cmd[name]
-	if !ok {
-		c.Cmd[name] = f
-	}
-	fmt.Printf("%s command has been registered !\n", name)
+	c.Cmd[name] = f
 }
 
 func HandlerLogin(s *State, cmd Command) error {
-	if len(cmd.Args) == 0 {
-		return fmt.Errorf("error, no commands argument provided")
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: login <username>")
 	}
 
-	err := s.Config.SetUser(cmd.Args[0])
+	username := cmd.Args[0]
+	ctx := context.Background()
+
+	_, err := s.Db.GetUser(ctx, username)
 	if err != nil {
+		return fmt.Errorf("user %q does not exist", username)
+	}
+
+	if err := s.Config.SetUser(username); err != nil {
 		return err
 	}
 
 	fmt.Println("The user has been set")
 	return nil
-
 }
 
 func HandlerRegister(s *State, cmd Command) error {
-	if len(cmd.Args) == 0 {
-		return fmt.Errorf("error, no commands argument provided")
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: register <username>")
 	}
 
+	username := cmd.Args[0]
 	ctx := context.Background()
+
 	newUser := database.CreateUserParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Name:      cmd.Args[1],
-	}
-	createdUsr, err := s.Db.CreateUser(ctx, newUser)
-	if err != nil {
-		defer os.Exit(1)
-		return fmt.Errorf("User already exist\n")
+		Name:      username,
 	}
 
-	err = s.Config.SetUser(createdUsr.Name)
+	createdUser, err := s.Db.CreateUser(ctx, newUser)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("The user has been created!\n")
-	fmt.Println(createdUsr)
-	return nil
+	if err := s.Config.SetUser(createdUser.Name); err != nil {
+		return err
+	}
 
+	fmt.Println("The user has been created")
+	fmt.Println(createdUser)
+
+	return nil
 }
