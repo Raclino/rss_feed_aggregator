@@ -1,11 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/Raclino/rss_feed_aggregator/internal/cli"
 	"github.com/Raclino/rss_feed_aggregator/internal/config"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -17,6 +19,8 @@ func main() {
 	state := &cli.State{
 		Config: conf,
 	}
+	db, err := sql.Open("postgres", conf.DbURL)
+	dbQueries := database.New(db)
 
 	commands := &cli.Commands{
 		Cmd: make(map[string]func(*cli.State, cli.Command) error),
