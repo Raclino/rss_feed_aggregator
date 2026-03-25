@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -12,16 +13,38 @@ type Config struct {
 	CurrentUserName string `json:"current_user_name"`
 }
 
+const configFileName = ".gatorconfig.json"
+
+func InitConfig() {
+	conf, err := read()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(*conf)
+
+	if err := conf.SetUser("raclino"); err != nil {
+		log.Fatal(err)
+	}
+
+	conf, err = read()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(*conf)
+}
+
 func getConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("error reading user home dir: %w", err)
 	}
 
-	return filepath.Join(homeDir, ".gatorconfig.json"), nil
+	return filepath.Join(homeDir, configFileName), nil
 }
 
-func Read() (*Config, error) {
+func read() (*Config, error) {
 	configPath, err := getConfigPath()
 	if err != nil {
 		return nil, err

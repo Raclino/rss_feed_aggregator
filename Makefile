@@ -1,4 +1,4 @@
-main_package_path = ./cmd/
+main_package_path = .
 binary_name = gator
 
 ## help: print this help message
