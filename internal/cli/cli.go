@@ -82,12 +82,18 @@ func HandlerRegister(s *State, cmd Command) error {
 		return err
 	}
 
-	fmt.Println("The user has been created")
+	fmt.Printf("The user: %s has been created\n", createdUser.Name)
 	fmt.Println(createdUser)
 
 	return nil
 }
 
 func HandlerReset(s *State, cmd Command) error {
-	database.DeleteAllUsers()
+	ctx := context.Background()
+	if err := s.Db.DeleteAllUsers(ctx); err != nil {
+		return err
+	}
+
+	fmt.Println("Database Reset was successful")
+	return nil
 }
