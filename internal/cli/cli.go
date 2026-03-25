@@ -1,13 +1,19 @@
 package cli
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/Raclino/rss_feed_aggregator/internal/config"
+	"github.com/Raclino/rss_feed_aggregator/internal/database"
+	"github.com/google/uuid"
 )
 
 type State struct {
 	Config *config.Config
+	Db     *database.Queries
 }
 
 type Command struct {
@@ -32,7 +38,7 @@ func (c *Commands) Register(name string, f func(*State, Command) error) {
 	if !ok {
 		c.Cmd[name] = f
 	}
-	fmt.Printf("%s command has been registered !", name)
+	fmt.Printf("%s command has been registered !\n", name)
 }
 
 func HandlerLogin(s *State, cmd Command) error {
@@ -46,6 +52,35 @@ func HandlerLogin(s *State, cmd Command) error {
 	}
 
 	fmt.Println("The user has been set")
+	return nil
+
+}
+
+func HandlerRegister(s *State, cmd Command) error {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("error, no commands argument provided")
+	}
+
+	ctx := context.Background()
+	newUser := database.CreateUserParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      cmd.Args[1],
+	}
+	createdUsr, err := s.Db.CreateUser(ctx, newUser)
+	if err != nil {
+		defer os.Exit(1)
+		return fmt.Errorf("User already exist\n")
+	}
+
+	err = s.Config.SetUser(createdUsr.Name)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("The user has been created!\n")
+	fmt.Println(createdUsr)
 	return nil
 
 }
