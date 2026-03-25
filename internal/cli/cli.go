@@ -6,36 +6,41 @@ import (
 	"github.com/Raclino/rss_feed_aggregator/internal/config"
 )
 
-type state struct {
-	config *config.Config
+type State struct {
+	Config *config.Config
 }
 
-type command struct {
-	login []string
+type Command struct {
+	Name string
+	Args []string
 }
-type commands struct {
-	cmd map[string]func(*state, command) error
-}
-
-func (c *commands) run(s *state, cmd command) error {
-	// c.cmd[cmd.login[0]]
-	return nil
+type Commands struct {
+	Cmd map[string]func(*State, Command) error
 }
 
-func (c *commands) register(name string, f func(*state, command) error) {
-	_, ok := c.cmd[name]
+func (c *Commands) Run(s *State, cmd Command) error {
+	handler, ok := c.Cmd[cmd.Name]
 	if !ok {
-		c.cmd[name] = f
+		return fmt.Errorf("error, %s is not registered", cmd.Name)
 	}
-	fmt.Println("%s command has been registered !", name)
+
+	return handler(s, cmd)
 }
 
-func handlerLogin(s *state, cmd command) error {
-	if len(cmd.login) == 0 {
+func (c *Commands) Register(name string, f func(*State, Command) error) {
+	_, ok := c.Cmd[name]
+	if !ok {
+		c.Cmd[name] = f
+	}
+	fmt.Printf("%s command has been registered !", name)
+}
+
+func HandlerLogin(s *State, cmd Command) error {
+	if len(cmd.Args) == 0 {
 		return fmt.Errorf("error, no commands argument provided")
 	}
 
-	err := s.config.SetUser(cmd.login[0])
+	err := s.Config.SetUser(cmd.Args[0])
 	if err != nil {
 		return err
 	}
