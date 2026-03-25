@@ -13,5 +13,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(conf)
+	fmt.Println("before:", conf)
+
+	if err := conf.SetUser("SetDuUserName"); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("after:", conf)
 }

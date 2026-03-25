@@ -3,8 +3,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
+	"path/filepath"
 )
 
 type Config struct {
@@ -12,30 +12,50 @@ type Config struct {
 	CurrentUserName string `json:"current_user_name"`
 }
 
-func Read() (*Config, error) {
+func getConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, fmt.Errorf("Error reading user homeDir: %w", err)
+		return "", fmt.Errorf("error reading user home dir: %w", err)
 	}
 
-	gatorFile, err := os.OpenInRoot(homeDir, ".gatorconfig.json")
+	return filepath.Join(homeDir, ".gatorconfig.json"), nil
+}
+
+func Read() (*Config, error) {
+	configPath, err := getConfigPath()
 	if err != nil {
-		return nil, fmt.Errorf("Error opening .gatorconfig.json file: %w", err)
-	}
-	data, err := io.ReadAll(gatorFile)
-	if err != nil {
-		return nil, fmt.Errorf("Error while reading gatorFile: %w", err)
+		return nil, err
 	}
 
-	config := Config{}
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config file: %w", err)
+	}
+
+	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("Error Unmarshalling data into Config struct: %w", err)
+		return nil, fmt.Errorf("error Unmarshalling config: %w", err)
 	}
 
 	return &config, nil
 }
 
 func (c *Config) SetUser(currentUserName string) error {
+	configPath, err := getConfigPath()
+	if err != nil {
+		return err
+	}
+
+	c.CurrentUserName = currentUserName
+
+	marshaledConf, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return fmt.Errorf("couldn't marshal config: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, marshaledConf, 0644); err != nil {
+		return fmt.Errorf("couldn't write config file: %w", err)
+	}
 
 	return nil
 }
