@@ -87,3 +87,7 @@ func HandlerRegister(s *State, cmd Command) error {
 
 	return nil
 }
+
+func HandlerReset(s *State, cmd Command) error {
+	database.DeleteAllUsers()
+}

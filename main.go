@@ -38,6 +38,7 @@ func main() {
 	}
 	commands.Register("login", cli.HandlerLogin)
 	commands.Register("register", cli.HandlerRegister)
+	commands.Register("reset", cli.HandlerReset)
 
 	if len(os.Args) < 2 {
 		log.Fatal("error: no command provided")
