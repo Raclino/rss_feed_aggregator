@@ -41,6 +41,7 @@ func main() {
 	commands.Register("reset", cli.HandlerReset)
 	commands.Register("users", cli.HandlerUsers)
 	commands.Register("agg", cli.HandlerAgg)
+	commands.Register("addfeed", cli.HandlerAddFeed)
 
 	if len(os.Args) < 2 {
 		log.Fatal("error: no command provided")
