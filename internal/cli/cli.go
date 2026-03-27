@@ -143,3 +143,14 @@ func HandlerAddFeed(s *State, cmd Command) error {
 	fmt.Println(f)
 	return nil
 }
+
+func HandlerFeeds(s *State, cmd Command) error {
+	ctx := context.Background()
+
+	feeds, err := s.Db.GetFeeds(ctx)
+	if err != nil {
+		return err
+	}
+	fmt.Println(feeds)
+	return nil
+}
