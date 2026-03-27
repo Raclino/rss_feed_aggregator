@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS feeds (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- +goose Up
 CREATE TABLE IF NOT EXISTS feed_follows (
     id UUID PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
@@ -23,5 +22,4 @@ CREATE TABLE IF NOT EXISTS feed_follows (
 
 -- +goose Down
 DROP TABLE IF EXISTS feeds;
-
 DROP TABLE IF EXISTS feed_follows;

@@ -110,6 +110,93 @@ func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowPara
 	return i, err
 }
 
+const getFeedByUrl = `-- name: GetFeedByUrl :one
+SELECT 
+    f.name,
+    f.id,
+    f.url,
+    f.user_id
+FROM 
+    feeds f
+WHERE f.url = $1
+`
+
+type GetFeedByUrlRow struct {
+	Name   string
+	ID     uuid.UUID
+	Url    string
+	UserID uuid.UUID
+}
+
+func (q *Queries) GetFeedByUrl(ctx context.Context, url string) (GetFeedByUrlRow, error) {
+	row := q.db.QueryRowContext(ctx, getFeedByUrl, url)
+	var i GetFeedByUrlRow
+	err := row.Scan(
+		&i.Name,
+		&i.ID,
+		&i.Url,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getFeedFollowsForUser = `-- name: GetFeedFollowsForUser :many
+SELECT
+    ff.id, ff.created_at, ff.updated_at, ff.user_id, feed_id, f.id, f.created_at, f.updated_at, name, url, f.user_id
+FROM feed_follows ff
+    INNER JOIN feeds f ON ff.feed_id = f.id
+WHERE ff.user_id = $1
+`
+
+type GetFeedFollowsForUserRow struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	UserID      uuid.UUID
+	FeedID      uuid.UUID
+	ID_2        uuid.UUID
+	CreatedAt_2 time.Time
+	UpdatedAt_2 time.Time
+	Name        string
+	Url         string
+	UserID_2    uuid.UUID
+}
+
+func (q *Queries) GetFeedFollowsForUser(ctx context.Context, userID uuid.UUID) ([]GetFeedFollowsForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFeedFollowsForUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFeedFollowsForUserRow
+	for rows.Next() {
+		var i GetFeedFollowsForUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+			&i.FeedID,
+			&i.ID_2,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
+			&i.Name,
+			&i.Url,
+			&i.UserID_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFeeds = `-- name: GetFeeds :many
 SELECT
     f.name,

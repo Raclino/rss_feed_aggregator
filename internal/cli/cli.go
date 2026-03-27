@@ -125,11 +125,12 @@ func HandlerAddFeed(s *State, cmd Command) error {
 	if err != nil {
 		return err
 	}
+
 	feedName := cmd.Args[0]
 	url := cmd.Args[1]
-
+	feedId := uuid.New()
 	newFeed := database.CreateFeedParams{
-		ID:        uuid.New(),
+		ID:        feedId,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Name:      feedName,
@@ -140,6 +141,19 @@ func HandlerAddFeed(s *State, cmd Command) error {
 	if err != nil {
 		return err
 	}
+
+	newFeedFollow := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feedId,
+	}
+	_, err = s.Db.CreateFeedFollow(ctx, newFeedFollow)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println(f)
 	return nil
 }
@@ -152,5 +166,58 @@ func HandlerFeeds(s *State, cmd Command) error {
 		return err
 	}
 	fmt.Println(feeds)
+	return nil
+}
+
+func HandlerFollow(s *State, cmd Command) error {
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: <feedURL>")
+	}
+
+	ctx := context.Background()
+	user, err := s.Db.GetUser(ctx, s.Config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	feed, err := s.Db.GetFeedByUrl(ctx, cmd.Args[0])
+	if err != nil {
+		return err
+	}
+
+	newFeedFollow := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	}
+	_, err = s.Db.CreateFeedFollow(ctx, newFeedFollow)
+	if err != nil {
+		return err
+	}
+	fmt.Println(feed.Name)
+
+	fmt.Println(user.Name)
+	return nil
+}
+
+func HandlerFollowing(s *State, cmd Command) error {
+	if len(cmd.Args) != 0 {
+		return fmt.Errorf("usage: <feedURL>")
+	}
+
+	ctx := context.Background()
+	user, err := s.Db.GetUser(ctx, s.Config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	feedFollowerCurrentUser, err := s.Db.GetFeedFollowsForUser(ctx, user.ID)
+
+	for _, feed := range feedFollowerCurrentUser {
+		fmt.Println(feed.Name)
+	}
+
 	return nil
 }
