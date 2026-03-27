@@ -14,14 +14,8 @@ import (
 
 const createFeed = `-- name: CreateFeed :one
 INSERT INTO feeds (id, created_at, updated_at, name, url, user_id)
-VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6
-)
+VALUES 
+    ($1, $2, $3, $4, $5, $6)
 RETURNING id, created_at, updated_at, name, url, user_id
 `
 
@@ -55,17 +49,81 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 	return i, err
 }
 
+const createFeedFollow = `-- name: CreateFeedFollow :one
+WITH inserted_feed_follow AS (
+    INSERT INTO
+        feed_follows (id, created_at, updated_at, user_id, feed_id)
+    VALUES
+        ($1, $2, $3, $4, $5)
+        RETURNING id, created_at, updated_at, user_id, feed_id
+)
+SELECT
+    isf.id,
+    isf.created_at,
+    isf.updated_at,
+    isf.user_id,
+    isf.feed_id,
+    u.name AS user_name,
+    f.name AS feed_name
+FROM
+    inserted_feed_follow isf
+    INNER JOIN users u ON isf.user_id = u.id
+    INNER JOIN feeds f ON isf.feed_id = f.id
+`
+
+type CreateFeedFollowParams struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	FeedID    uuid.UUID
+}
+
+type CreateFeedFollowRow struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	FeedID    uuid.UUID
+	UserName  string
+	FeedName  string
+}
+
+func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowParams) (CreateFeedFollowRow, error) {
+	row := q.db.QueryRowContext(ctx, createFeedFollow,
+		arg.ID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.UserID,
+		arg.FeedID,
+	)
+	var i CreateFeedFollowRow
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UserID,
+		&i.FeedID,
+		&i.UserName,
+		&i.FeedName,
+	)
+	return i, err
+}
+
 const getFeeds = `-- name: GetFeeds :many
-SELECT 
+SELECT
     f.name,
     f.url,
     u.name
-FROM feeds f
-INNER JOIN (
-    SELECT id, name
-    FROM users
-) u
-on f.user_id = u.id
+FROM
+    feeds f
+    INNER JOIN (
+        SELECT
+            id,
+            name
+        FROM
+            users
+    ) u on f.user_id = u.id
 `
 
 type GetFeedsRow struct {
