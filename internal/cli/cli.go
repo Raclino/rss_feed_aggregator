@@ -100,3 +100,10 @@ func HandlerUsers(s *State, cmd Command) error {
 	}
 	return nil
 }
+
+func HandlerAgg(s *State, cmd Command) error {
+	ctx := context.Background()
+
+	feed := FetchFeed()
+	return nil
+}
