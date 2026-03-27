@@ -38,8 +38,8 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	if err = xml.Unmarshal(body, &rssFeed); err != nil {
 		return nil, fmt.Errorf("couldn't Unmarshal the response: %w", err)
 	}
-	html.UnescapeString(rssFeed.Channel.Title)
-	html.UnescapeString(rssFeed.Channel.Description)
+	rssFeed.Channel.Title = html.UnescapeString(rssFeed.Channel.Title)
+	rssFeed.Channel.Description = html.UnescapeString(rssFeed.Channel.Description)
 	fmt.Println(rssFeed)
 
 	return &rssFeed, nil

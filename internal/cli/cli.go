@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Raclino/rss_feed_aggregator/internal/database"
+	"github.com/Raclino/rss_feed_aggregator/internal/rss"
 	"github.com/google/uuid"
 )
 
@@ -103,7 +104,13 @@ func HandlerUsers(s *State, cmd Command) error {
 
 func HandlerAgg(s *State, cmd Command) error {
 	ctx := context.Background()
+	url := "https://www.wagslane.dev/index.xml"
 
-	feed := FetchFeed()
+	feed, err := rss.FetchFeed(ctx, url)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
 	return nil
 }
