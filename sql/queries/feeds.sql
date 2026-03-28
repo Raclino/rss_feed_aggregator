@@ -56,3 +56,9 @@ SELECT
 FROM feed_follows ff
     INNER JOIN feeds f ON ff.feed_id = f.id
 WHERE ff.user_id = $1;
+
+-- name: DeleteFeedFollow :one
+DELETE FROM
+    feed_follows ff
+WHERE ff.user_id = $1 AND ff.feed_id = $2
+RETURNING *;
