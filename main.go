@@ -36,15 +36,16 @@ func main() {
 	commands := &cli.Commands{
 		Handlers: make(map[string]func(*cli.State, cli.Command) error),
 	}
+
 	commands.Register("login", cli.HandlerLogin)
 	commands.Register("register", cli.HandlerRegister)
 	commands.Register("reset", cli.HandlerReset)
 	commands.Register("users", cli.HandlerUsers)
 	commands.Register("agg", cli.HandlerAgg)
-	commands.Register("addfeed", cli.HandlerAddFeed)
+	commands.Register("addfeed", cli.MiddlewareLoggedIn(cli.HandlerAddFeed))
 	commands.Register("feeds", cli.HandlerFeeds)
-	commands.Register("follow", cli.HandlerFollow)
-	commands.Register("following", cli.HandlerFollowing)
+	commands.Register("follow", cli.MiddlewareLoggedIn(cli.HandlerFollow))
+	commands.Register("following", cli.MiddlewareLoggedIn(cli.HandlerFollowing))
 
 	if len(os.Args) < 2 {
 		log.Fatal("error: no command provided")
