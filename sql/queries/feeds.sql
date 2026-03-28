@@ -62,3 +62,16 @@ DELETE FROM
     feed_follows ff
 WHERE ff.user_id = $1 AND ff.feed_id = $2
 RETURNING *;
+
+-- name: MarkFeedFetched :one
+UPDATE
+    feeds
+SET updated_at = $2, last_fetched_at = $3
+WHERE id = $1
+RETURNING *;
+
+--name: GetNextFeedToFetch :one
+SELECT 
+    url
+FROM feeds
+ORDER BY last_fetched_at DESC NULLS FIRST;

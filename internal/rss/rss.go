@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/Raclino/rss_feed_aggregator/internal/cli"
 )
 
 var client = http.Client{
@@ -43,4 +45,10 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	fmt.Println(rssFeed)
 
 	return &rssFeed, nil
+}
+
+func ScrapeFeeds(ctx context.Context, s *cli.State) error {
+	// nxtFeed, err:= s.Db
+	return nil
+
 }
