@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
@@ -14,67 +13,65 @@ import (
 	"github.com/lib/pq"
 )
 
-var ErrDupKeyUrl = errors.New("duplicate key value violates unique constraint 'posts_url_key'")
-
 func ScrapeFeeds(ctx context.Context, s *cli.State) error {
-	nxtFeed, err := s.Db.GetNextFeedToFetch(ctx)
+	nextFeed, err := s.Db.GetNextFeedToFetch(ctx)
 	if err != nil {
 		return err
 	}
-	fmt.Println(nxtFeed)
 
 	now := time.Now()
-	markFeedFetchedParams := database.MarkFeedFetchedParams{
-		ID:        nxtFeed.ID,
+	feed, err := s.Db.MarkFeedFetched(ctx, database.MarkFeedFetchedParams{
+		ID:        nextFeed.ID,
 		UpdatedAt: now,
 		LastFetchedAt: sql.NullTime{
 			Time:  now,
 			Valid: true,
 		},
-	}
-	f, err := s.Db.MarkFeedFetched(ctx, markFeedFetchedParams)
+	})
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Fetching feed: %s\n", nxtFeed.Name)
-	rssFeed, err := rss.FetchFeed(ctx, f.Url)
+	fmt.Printf("Fetching feed: %s\n", feed.Name)
+
+	rssFeed, err := rss.FetchFeed(ctx, feed.Url)
 	if err != nil {
 		return err
 	}
 
 	for _, item := range rssFeed.Channel.Item {
-		parsedTime, err := parsePublishedAt(item.PubDate)
+		publishedAt, err := parsePublishedAt(item.PubDate)
 		if err != nil {
-			return fmt.Errorf("couldn't parse publishedAt time format %w", err)
+			fmt.Printf("error parsing date for post %q: %v\n", item.Title, err)
+			publishedAt = sql.NullTime{Valid: false}
 		}
-		now := time.Now()
 
-		postParams := database.CreatePostParams{
+		description := sql.NullString{
+			String: item.Description,
+			Valid:  item.Description != "",
+		}
+
+		_, err = s.Db.CreatePost(ctx, database.CreatePostParams{
 			ID:          uuid.New(),
 			CreatedAt:   now,
 			UpdatedAt:   now,
 			Title:       item.Title,
 			Url:         item.Link,
-			Description: item.Description,
-			PublishedAt: parsedTime,
-			FeedID:      nxtFeed.ID,
-		}
-		post, err := s.Db.CreatePost(ctx, postParams)
+			Description: description,
+			PublishedAt: publishedAt,
+			FeedID:      feed.ID,
+		})
 		if err != nil {
-			// duplicate key, ignored
 			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
 				continue
 			}
-			fmt.Printf("error creating post: %v\n", err)
+			fmt.Printf("error creating post %q: %v\n", item.Title, err)
 		}
-		if err != nil {
-			return err
-		}
-		fmt.Printf("created Post: %+v\n", post)
 	}
+
 	return nil
 }
+
 func parsePublishedAt(s string) (sql.NullTime, error) {
 	if s == "" {
 		return sql.NullTime{Valid: false}, nil

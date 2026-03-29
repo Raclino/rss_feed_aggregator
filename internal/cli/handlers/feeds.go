@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Raclino/rss_feed_aggregator/internal/cli"
@@ -160,5 +161,31 @@ func HandlerAgg(s *cli.State, cmd cli.Command) error {
 }
 
 func HandlerBrowse(s *cli.State, cmd cli.Command, user database.User) error {
+	limit := int32(2)
+
+	if len(cmd.Args) > 1 {
+		return fmt.Errorf("usage: browse <limit>")
+	}
+
+	if len(cmd.Args) == 1 {
+		parsed, err := strconv.Atoi(cmd.Args[0])
+		if err != nil {
+			return fmt.Errorf("invalid limit: %w", err)
+		}
+		limit = int32(parsed)
+	}
+
+	posts, err := s.Db.GetPostsForUser(context.Background(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  limit,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, post := range posts {
+		fmt.Printf("%s\n%s\n\n", post.Title, post.Url)
+	}
+
 	return nil
 }
