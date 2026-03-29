@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS feeds (
     name TEXT NOT NULL,
     url TEXT NOT NULL UNIQUE,
     user_id UUID NOT NULL,
-    last_fetched_at TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -22,5 +21,5 @@ CREATE TABLE IF NOT EXISTS feed_follows (
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS feeds;
 DROP TABLE IF EXISTS feed_follows;
+DROP TABLE IF EXISTS feeds;

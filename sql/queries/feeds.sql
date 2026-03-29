@@ -71,8 +71,7 @@ WHERE id = $1
 RETURNING *;
 
 -- name: GetNextFeedToFetch :one
-SELECT 
-    id, 
-    url
+SELECT *
 FROM feeds
-ORDER BY last_fetched_at DESC NULLS FIRST;
+ORDER BY last_fetched_at ASC NULLS FIRST
+LIMIT 1;

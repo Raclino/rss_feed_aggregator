@@ -6,23 +6,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Raclino/rss_feed_aggregator/internal/cli"
 	"github.com/Raclino/rss_feed_aggregator/internal/database"
 	"github.com/Raclino/rss_feed_aggregator/internal/rss"
 )
 
-func ScrapeFeeds(ctx context.Context, s *cli.State) error {
+func ScrapeFeeds(ctx context.Context, s *State) error {
 	nxtFeed, err := s.Db.GetNextFeedToFetch(ctx)
 	if err != nil {
 		return err
 	}
 	fmt.Println(nxtFeed)
 
+	now := time.Now()
 	markFeedFetchedParams := database.MarkFeedFetchedParams{
 		ID:        nxtFeed.ID,
-		UpdatedAt: time.Now(),
+		UpdatedAt: now,
 		LastFetchedAt: sql.NullTime{
-			Time:  time.Now(),
+			Time:  now,
 			Valid: true,
 		},
 	}
@@ -31,6 +31,7 @@ func ScrapeFeeds(ctx context.Context, s *cli.State) error {
 		return err
 	}
 
+	fmt.Printf("Fetching feed: %s\n", nxtFeed.Name)
 	rssFeed, err := rss.FetchFeed(ctx, f.Url)
 	if err != nil {
 		return err

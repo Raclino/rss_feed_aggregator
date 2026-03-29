@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Raclino/rss_feed_aggregator/internal/database"
-	"github.com/Raclino/rss_feed_aggregator/internal/rss"
 	"github.com/google/uuid"
 )
 
@@ -103,16 +102,26 @@ func HandlerUsers(s *State, cmd Command) error {
 }
 
 func HandlerAgg(s *State, cmd Command) error {
-	ctx := context.Background()
-	url := "https://www.wagslane.dev/index.xml"
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: agg <time_between_reqs>")
+	}
 
-	feed, err := rss.FetchFeed(ctx, url)
+	timeBetweenRequests, err := time.ParseDuration(cmd.Args[0])
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(feed)
-	return nil
+	fmt.Printf("Collecting feeds every %s\n", timeBetweenRequests)
+
+	ctx := context.Background()
+	ticker := time.NewTicker(timeBetweenRequests)
+	defer ticker.Stop()
+
+	for ; ; <-ticker.C {
+		if err := ScrapeFeeds(ctx, s); err != nil {
+			fmt.Println("error scraping feeds:", err)
+		}
+	}
 }
 
 func HandlerAddFeed(s *State, cmd Command, user database.User) error {
