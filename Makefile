@@ -2,7 +2,7 @@ main_package_path = .
 binary_name = gator
 bin_dir = /tmp/bin
 
-db_url = postgres://postgres:superpswd@localhost:5432/gator?sslmode=disable
+db_url = postgres://postgres:superpswd@localhost:5433/gator?sslmode=disable
 migration_dir = sql/schema
 
 ## help: print this help message

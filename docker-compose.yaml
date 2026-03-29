@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: gator-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: superpswd
+      POSTGRES_DB: gator
+    ports:
+      - "5433:5432"
+    volumes:
+      - gator_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  gator_postgres_data:
