@@ -48,6 +48,7 @@ func main() {
 	commands.Register("follow", cli.MiddlewareLoggedIn(handlers.HandlerFollow))
 	commands.Register("unfollow", cli.MiddlewareLoggedIn(handlers.HandlerUnFollow))
 	commands.Register("following", cli.MiddlewareLoggedIn(handlers.HandlerFollowing))
+	commands.Register("browse", cli.MiddlewareLoggedIn(handlers.HandlerBrowse))
 
 	if len(os.Args) < 2 {
 		log.Fatal("error: no command provided")

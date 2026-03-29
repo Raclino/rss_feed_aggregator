@@ -7,6 +7,7 @@ import (
 
 	"github.com/Raclino/rss_feed_aggregator/internal/cli"
 	"github.com/Raclino/rss_feed_aggregator/internal/database"
+	"github.com/Raclino/rss_feed_aggregator/internal/services"
 	"github.com/google/uuid"
 )
 
@@ -156,4 +157,8 @@ func HandlerAgg(s *cli.State, cmd cli.Command) error {
 			fmt.Println("error scraping feeds:", err)
 		}
 	}
+}
+
+func HandlerBrowse(s *cli.State, cmd cli.Command, user database.User) error {
+	return nil
 }
