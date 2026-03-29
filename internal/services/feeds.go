@@ -1,4 +1,4 @@
-package cli
+package services
 
 import (
 	"context"
@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Raclino/rss_feed_aggregator/internal/cli"
 	"github.com/Raclino/rss_feed_aggregator/internal/database"
 	"github.com/Raclino/rss_feed_aggregator/internal/rss"
 )
 
-func ScrapeFeeds(ctx context.Context, s *State) error {
+func ScrapeFeeds(ctx context.Context, s *cli.State) error {
 	nxtFeed, err := s.Db.GetNextFeedToFetch(ctx)
 	if err != nil {
 		return err

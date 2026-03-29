@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Raclino/rss_feed_aggregator/internal/cli"
+	"github.com/Raclino/rss_feed_aggregator/internal/cli/handlers"
 	"github.com/Raclino/rss_feed_aggregator/internal/config"
 	"github.com/Raclino/rss_feed_aggregator/internal/database"
 	_ "github.com/lib/pq"
@@ -37,16 +38,16 @@ func main() {
 		Handlers: make(map[string]func(*cli.State, cli.Command) error),
 	}
 
-	commands.Register("login", cli.HandlerLogin)
-	commands.Register("register", cli.HandlerRegister)
-	commands.Register("reset", cli.HandlerReset)
-	commands.Register("users", cli.HandlerUsers)
-	commands.Register("agg", cli.HandlerAgg)
-	commands.Register("addfeed", cli.MiddlewareLoggedIn(cli.HandlerAddFeed))
-	commands.Register("feeds", cli.HandlerFeeds)
-	commands.Register("follow", cli.MiddlewareLoggedIn(cli.HandlerFollow))
-	commands.Register("unfollow", cli.MiddlewareLoggedIn(cli.HandlerUnFollow))
-	commands.Register("following", cli.MiddlewareLoggedIn(cli.HandlerFollowing))
+	commands.Register("login", handlers.HandlerLogin)
+	commands.Register("register", handlers.HandlerRegister)
+	commands.Register("reset", handlers.HandlerReset)
+	commands.Register("users", handlers.HandlerListUsers)
+	commands.Register("agg", handlers.HandlerAgg)
+	commands.Register("addfeed", cli.MiddlewareLoggedIn(handlers.HandlerAddFeed))
+	commands.Register("feeds", handlers.HandlerListFeeds)
+	commands.Register("follow", cli.MiddlewareLoggedIn(handlers.HandlerFollow))
+	commands.Register("unfollow", cli.MiddlewareLoggedIn(handlers.HandlerUnFollow))
+	commands.Register("following", cli.MiddlewareLoggedIn(handlers.HandlerFollowing))
 
 	if len(os.Args) < 2 {
 		log.Fatal("error: no command provided")
